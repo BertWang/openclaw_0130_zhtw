@@ -1,8 +1,8 @@
 import SwiftUI
 
 struct SettingsToggleRow: View {
-    let title: String
-    let subtitle: String?
+    let title: LocalizedStringKey
+    let subtitle: LocalizedStringKey?
     @Binding var binding: Bool
 
     var body: some View {
@@ -13,7 +13,7 @@ struct SettingsToggleRow: View {
             }
             .toggleStyle(.checkbox)
 
-            if let subtitle, !subtitle.isEmpty {
+            if let subtitle {
                 Text(subtitle)
                     .font(.footnote)
                     .foregroundStyle(.tertiary)

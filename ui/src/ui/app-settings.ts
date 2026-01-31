@@ -9,24 +9,13 @@ import { loadExecApprovals } from "./controllers/exec-approvals";
 import { loadPresence } from "./controllers/presence";
 import { loadSessions } from "./controllers/sessions";
 import { loadSkills } from "./controllers/skills";
-import {
-  inferBasePathFromPathname,
-  normalizeBasePath,
-  normalizePath,
-  pathForTab,
-  tabFromPath,
-  type Tab,
-} from "./navigation";
+import { setLocale as setLocaleInternal } from "./locales";
+import { inferBasePathFromPathname, normalizeBasePath, normalizePath, pathForTab, tabFromPath, type Tab } from "./navigation";
 import { saveSettings, type UiSettings } from "./storage";
 import { resolveTheme, type ResolvedTheme, type ThemeMode } from "./theme";
 import { startThemeTransition, type ThemeTransitionContext } from "./theme-transition";
 import { scheduleChatScroll, scheduleLogsScroll } from "./app-scroll";
-import {
-  startLogsPolling,
-  stopLogsPolling,
-  startDebugPolling,
-  stopDebugPolling,
-} from "./app-polling";
+import { startLogsPolling, stopLogsPolling, startDebugPolling, stopDebugPolling } from "./app-polling";
 import { refreshChat } from "./app-chat";
 import type { OpenClawApp } from "./app";
 
@@ -46,6 +35,7 @@ type SettingsHost = {
   themeMedia: MediaQueryList | null;
   themeMediaHandler: ((event: MediaQueryListEvent) => void) | null;
   pendingGatewayUrl?: string | null;
+  locale?: "en" | "zh-TW" | null;
 };
 
 export function applySettings(host: SettingsHost, next: UiSettings) {
@@ -90,7 +80,7 @@ export function applySettingsFromUrl(host: SettingsHost) {
   if (passwordRaw != null) {
     const password = passwordRaw.trim();
     if (password) {
-      (host as { password: string }).password = password;
+      (host as unknown as { password: string }).password = password;
     }
     params.delete("password");
     shouldCleanUrl = true;
@@ -126,7 +116,8 @@ export function applySettingsFromUrl(host: SettingsHost) {
 export function setTab(host: SettingsHost, next: Tab) {
   if (host.tab !== next) host.tab = next;
   if (next === "chat") host.chatHasAutoScrolled = false;
-  if (next === "logs") startLogsPolling(host as unknown as Parameters<typeof startLogsPolling>[0]);
+  if (next === "logs")
+    startLogsPolling(host as unknown as Parameters<typeof startLogsPolling>[0]);
   else stopLogsPolling(host as unknown as Parameters<typeof stopLogsPolling>[0]);
   if (next === "debug")
     startDebugPolling(host as unknown as Parameters<typeof startDebugPolling>[0]);
@@ -135,7 +126,11 @@ export function setTab(host: SettingsHost, next: Tab) {
   syncUrlWithTab(host, next, false);
 }
 
-export function setTheme(host: SettingsHost, next: ThemeMode, context?: ThemeTransitionContext) {
+export function setTheme(
+  host: SettingsHost,
+  next: ThemeMode,
+  context?: ThemeTransitionContext,
+) {
   const applyTheme = () => {
     host.theme = next;
     applySettings(host, { ...host.settings, theme: next });
@@ -147,6 +142,11 @@ export function setTheme(host: SettingsHost, next: ThemeMode, context?: ThemeTra
     context,
     currentTheme: host.theme,
   });
+}
+
+export function setLocale(host: SettingsHost, next: "en" | "zh-TW") {
+  setLocaleInternal(next);
+  applySettings(host, { ...host.settings, locale: next });
 }
 
 export async function refreshActiveTab(host: SettingsHost) {
@@ -180,7 +180,10 @@ export async function refreshActiveTab(host: SettingsHost) {
   if (host.tab === "logs") {
     host.logsAtBottom = true;
     await loadLogs(host as unknown as OpenClawApp, { reset: true });
-    scheduleLogsScroll(host as unknown as Parameters<typeof scheduleLogsScroll>[0], true);
+    scheduleLogsScroll(
+      host as unknown as Parameters<typeof scheduleLogsScroll>[0],
+      true,
+    );
   }
 }
 
@@ -266,7 +269,8 @@ export function onPopState(host: SettingsHost) {
 export function setTabFromRoute(host: SettingsHost, next: Tab) {
   if (host.tab !== next) host.tab = next;
   if (next === "chat") host.chatHasAutoScrolled = false;
-  if (next === "logs") startLogsPolling(host as unknown as Parameters<typeof startLogsPolling>[0]);
+  if (next === "logs")
+    startLogsPolling(host as unknown as Parameters<typeof startLogsPolling>[0]);
   else stopLogsPolling(host as unknown as Parameters<typeof stopLogsPolling>[0]);
   if (next === "debug")
     startDebugPolling(host as unknown as Parameters<typeof startDebugPolling>[0]);
@@ -297,7 +301,11 @@ export function syncUrlWithTab(host: SettingsHost, tab: Tab, replace: boolean) {
   }
 }
 
-export function syncUrlWithSessionKey(host: SettingsHost, sessionKey: string, replace: boolean) {
+export function syncUrlWithSessionKey(
+  host: SettingsHost,
+  sessionKey: string,
+  replace: boolean,
+) {
   if (typeof window === "undefined") return;
   const url = new URL(window.location.href);
   url.searchParams.set("session", sessionKey);

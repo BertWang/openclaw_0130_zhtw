@@ -1,5 +1,6 @@
 import { html, nothing, type TemplateResult } from "lit";
 import type { ConfigUiHints } from "../types";
+import { t } from "../locales";
 import {
   defaultValue,
   hintForPath,
@@ -28,69 +29,11 @@ function jsonValue(value: unknown): string {
 
 // SVG Icons as template literals
 const icons = {
-  chevronDown: html`
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <polyline points="6 9 12 15 18 9"></polyline>
-    </svg>
-  `,
-  plus: html`
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <line x1="12" y1="5" x2="12" y2="19"></line>
-      <line x1="5" y1="12" x2="19" y2="12"></line>
-    </svg>
-  `,
-  minus: html`
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <line x1="5" y1="12" x2="19" y2="12"></line>
-    </svg>
-  `,
-  trash: html`
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <polyline points="3 6 5 6 21 6"></polyline>
-      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-    </svg>
-  `,
-  edit: html`
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-    </svg>
-  `,
+  chevronDown: html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>`,
+  plus: html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`,
+  minus: html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>`,
+  trash: html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`,
+  edit: html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`,
 };
 
 export function renderNode(params: {
@@ -122,7 +65,7 @@ export function renderNode(params: {
   if (schema.anyOf || schema.oneOf) {
     const variants = schema.anyOf ?? schema.oneOf ?? [];
     const nonNull = variants.filter(
-      (v) => !(v.type === "null" || (Array.isArray(v.type) && v.type.includes("null"))),
+      (v) => !(v.type === "null" || (Array.isArray(v.type) && v.type.includes("null")))
     );
 
     if (nonNull.length === 1) {
@@ -146,18 +89,16 @@ export function renderNode(params: {
           ${showLabel ? html`<label class="cfg-field__label">${label}</label>` : nothing}
           ${help ? html`<div class="cfg-field__help">${help}</div>` : nothing}
           <div class="cfg-segmented">
-            ${literals.map(
-              (lit, idx) => html`
+            ${literals.map((lit, idx) => html`
               <button
                 type="button"
-                class="cfg-segmented__btn ${lit === resolvedValue || String(lit) === String(resolvedValue) ? "active" : ""}"
+                class="cfg-segmented__btn ${lit === resolvedValue || String(lit) === String(resolvedValue) ? 'active' : ''}"
                 ?disabled=${disabled}
                 @click=${() => onPatch(path, lit)}
               >
                 ${String(lit)}
               </button>
-            `,
-            )}
+            `)}
           </div>
         </div>
       `;
@@ -169,9 +110,11 @@ export function renderNode(params: {
     }
 
     // Handle mixed primitive types
-    const primitiveTypes = new Set(nonNull.map((variant) => schemaType(variant)).filter(Boolean));
+    const primitiveTypes = new Set(
+      nonNull.map((variant) => schemaType(variant)).filter(Boolean)
+    );
     const normalizedTypes = new Set(
-      [...primitiveTypes].map((v) => (v === "integer" ? "number" : v)),
+      [...primitiveTypes].map((v) => (v === "integer" ? "number" : v))
     );
 
     if ([...normalizedTypes].every((v) => ["string", "number", "boolean"].includes(v as string))) {
@@ -205,18 +148,16 @@ export function renderNode(params: {
           ${showLabel ? html`<label class="cfg-field__label">${label}</label>` : nothing}
           ${help ? html`<div class="cfg-field__help">${help}</div>` : nothing}
           <div class="cfg-segmented">
-            ${options.map(
-              (opt) => html`
+            ${options.map((opt) => html`
               <button
                 type="button"
-                class="cfg-segmented__btn ${opt === resolvedValue || String(opt) === String(resolvedValue) ? "active" : ""}"
+                class="cfg-segmented__btn ${opt === resolvedValue || String(opt) === String(resolvedValue) ? 'active' : ''}"
                 ?disabled=${disabled}
                 @click=${() => onPatch(path, opt)}
               >
                 ${String(opt)}
               </button>
-            `,
-            )}
+            `)}
           </div>
         </div>
       `;
@@ -236,14 +177,9 @@ export function renderNode(params: {
 
   // Boolean - toggle row
   if (type === "boolean") {
-    const displayValue =
-      typeof value === "boolean"
-        ? value
-        : typeof schema.default === "boolean"
-          ? schema.default
-          : false;
+    const displayValue = typeof value === "boolean" ? value : typeof schema.default === "boolean" ? schema.default : false;
     return html`
-      <label class="cfg-toggle-row ${disabled ? "disabled" : ""}">
+      <label class="cfg-toggle-row ${disabled ? 'disabled' : ''}">
         <div class="cfg-toggle-row__content">
           <span class="cfg-toggle-row__label">${label}</span>
           ${help ? html`<span class="cfg-toggle-row__help">${help}</span>` : nothing}
@@ -313,27 +249,25 @@ function renderTextInput(params: {
           .value=${displayValue == null ? "" : String(displayValue)}
           ?disabled=${disabled}
           @input=${(e: Event) => {
-            const raw = (e.target as HTMLInputElement).value;
-            if (inputType === "number") {
-              if (raw.trim() === "") {
-                onPatch(path, undefined);
-                return;
-              }
-              const parsed = Number(raw);
-              onPatch(path, Number.isNaN(parsed) ? raw : parsed);
-              return;
-            }
-            onPatch(path, raw);
-          }}
+      const raw = (e.target as HTMLInputElement).value;
+      if (inputType === "number") {
+        if (raw.trim() === "") {
+          onPatch(path, undefined);
+          return;
+        }
+        const parsed = Number(raw);
+        onPatch(path, Number.isNaN(parsed) ? raw : parsed);
+        return;
+      }
+      onPatch(path, raw);
+    }}
           @change=${(e: Event) => {
-            if (inputType === "number") return;
-            const raw = (e.target as HTMLInputElement).value;
-            onPatch(path, raw.trim());
-          }}
+      if (inputType === "number") return;
+      const raw = (e.target as HTMLInputElement).value;
+      onPatch(path, raw.trim());
+    }}
         />
-        ${
-          schema.default !== undefined
-            ? html`
+        ${schema.default !== undefined ? html`
           <button
             type="button"
             class="cfg-input__reset"
@@ -341,9 +275,7 @@ function renderTextInput(params: {
             ?disabled=${disabled}
             @click=${() => onPatch(path, schema.default)}
           >↺</button>
-        `
-            : nothing
-        }
+        ` : nothing}
       </div>
     </div>
   `;
@@ -383,10 +315,10 @@ function renderNumberInput(params: {
           .value=${displayValue == null ? "" : String(displayValue)}
           ?disabled=${disabled}
           @input=${(e: Event) => {
-            const raw = (e.target as HTMLInputElement).value;
-            const parsed = raw === "" ? undefined : Number(raw);
-            onPatch(path, parsed);
-          }}
+      const raw = (e.target as HTMLInputElement).value;
+      const parsed = raw === "" ? undefined : Number(raw);
+      onPatch(path, parsed);
+    }}
         />
         <button
           type="button"
@@ -429,16 +361,14 @@ function renderSelect(params: {
         ?disabled=${disabled}
         .value=${currentIndex >= 0 ? String(currentIndex) : unset}
         @change=${(e: Event) => {
-          const val = (e.target as HTMLSelectElement).value;
-          onPatch(path, val === unset ? undefined : options[Number(val)]);
-        }}
+      const val = (e.target as HTMLSelectElement).value;
+      onPatch(path, val === unset ? undefined : options[Number(val)]);
+    }}
       >
         <option value=${unset}>Select...</option>
-        ${options.map(
-          (opt, idx) => html`
+        ${options.map((opt, idx) => html`
           <option value=${String(idx)}>${String(opt)}</option>
-        `,
-        )}
+        `)}
       </select>
     </div>
   `;
@@ -461,10 +391,9 @@ function renderObject(params: {
   const help = hint?.help ?? schema.description;
 
   const fallback = value ?? schema.default;
-  const obj =
-    fallback && typeof fallback === "object" && !Array.isArray(fallback)
-      ? (fallback as Record<string, unknown>)
-      : {};
+  const obj = fallback && typeof fallback === "object" && !Array.isArray(fallback)
+    ? (fallback as Record<string, unknown>)
+    : {};
   const props = schema.properties ?? {};
   const entries = Object.entries(props);
 
@@ -485,30 +414,26 @@ function renderObject(params: {
     return html`
       <div class="cfg-fields">
         ${sorted.map(([propKey, node]) =>
-          renderNode({
-            schema: node,
-            value: obj[propKey],
-            path: [...path, propKey],
-            hints,
-            unsupported,
-            disabled,
-            onPatch,
-          }),
-        )}
-        ${
-          allowExtra
-            ? renderMapField({
-                schema: additional as JsonSchema,
-                value: obj,
-                path,
-                hints,
-                unsupported,
-                disabled,
-                reservedKeys: reserved,
-                onPatch,
-              })
-            : nothing
-        }
+      renderNode({
+        schema: node,
+        value: obj[propKey],
+        path: [...path, propKey],
+        hints,
+        unsupported,
+        disabled,
+        onPatch,
+      })
+    )}
+        ${allowExtra ? renderMapField({
+      schema: additional as JsonSchema,
+      value: obj,
+      path,
+      hints,
+      unsupported,
+      disabled,
+      reservedKeys: reserved,
+      onPatch,
+    }) : nothing}
       </div>
     `;
   }
@@ -523,30 +448,26 @@ function renderObject(params: {
       ${help ? html`<div class="cfg-object__help">${help}</div>` : nothing}
       <div class="cfg-object__content">
         ${sorted.map(([propKey, node]) =>
-          renderNode({
-            schema: node,
-            value: obj[propKey],
-            path: [...path, propKey],
-            hints,
-            unsupported,
-            disabled,
-            onPatch,
-          }),
-        )}
-        ${
-          allowExtra
-            ? renderMapField({
-                schema: additional as JsonSchema,
-                value: obj,
-                path,
-                hints,
-                unsupported,
-                disabled,
-                reservedKeys: reserved,
-                onPatch,
-              })
-            : nothing
-        }
+    renderNode({
+      schema: node,
+      value: obj[propKey],
+      path: [...path, propKey],
+      hints,
+      unsupported,
+      disabled,
+      onPatch,
+    })
+  )}
+        ${allowExtra ? renderMapField({
+    schema: additional as JsonSchema,
+    value: obj,
+    path,
+    hints,
+    unsupported,
+    disabled,
+    reservedKeys: reserved,
+    onPatch,
+  }) : nothing}
       </div>
     </details>
   `;
@@ -584,31 +505,29 @@ function renderArray(params: {
     <div class="cfg-array">
       <div class="cfg-array__header">
         ${showLabel ? html`<span class="cfg-array__label">${label}</span>` : nothing}
-        <span class="cfg-array__count">${arr.length} item${arr.length !== 1 ? "s" : ""}</span>
+        <span class="cfg-array__count">${arr.length} item${arr.length !== 1 ? 's' : ''}</span>
         <button
           type="button"
           class="cfg-array__add"
           ?disabled=${disabled}
           @click=${() => {
-            const next = [...arr, defaultValue(itemsSchema)];
-            onPatch(path, next);
-          }}
+      const next = [...arr, defaultValue(itemsSchema)];
+      onPatch(path, next);
+    }}
         >
           <span class="cfg-array__add-icon">${icons.plus}</span>
-          Add
+          ${t().addEntry}
         </button>
       </div>
       ${help ? html`<div class="cfg-array__help">${help}</div>` : nothing}
 
-      ${
-        arr.length === 0
-          ? html`
-              <div class="cfg-array__empty">No items yet. Click "Add" to create one.</div>
-            `
-          : html`
+      ${arr.length === 0 ? html`
+        <div class="cfg-array__empty">
+          No items yet. Click "Add" to create one.
+        </div>
+      ` : html`
         <div class="cfg-array__items">
-          ${arr.map(
-            (item, idx) => html`
+          ${arr.map((item, idx) => html`
             <div class="cfg-array__item">
               <div class="cfg-array__item-header">
                 <span class="cfg-array__item-index">#${idx + 1}</span>
@@ -618,32 +537,30 @@ function renderArray(params: {
                   title="Remove item"
                   ?disabled=${disabled}
                   @click=${() => {
-                    const next = [...arr];
-                    next.splice(idx, 1);
-                    onPatch(path, next);
-                  }}
+        const next = [...arr];
+        next.splice(idx, 1);
+        onPatch(path, next);
+      }}
                 >
                   ${icons.trash}
                 </button>
               </div>
               <div class="cfg-array__item-content">
                 ${renderNode({
-                  schema: itemsSchema,
-                  value: item,
-                  path: [...path, idx],
-                  hints,
-                  unsupported,
-                  disabled,
-                  showLabel: false,
-                  onPatch,
-                })}
+        schema: itemsSchema,
+        value: item,
+        path: [...path, idx],
+        hints,
+        unsupported,
+        disabled,
+        showLabel: false,
+        onPatch,
+      })}
               </div>
             </div>
-          `,
-          )}
+          `)}
         </div>
-      `
-      }
+      `}
     </div>
   `;
 }
@@ -671,33 +588,30 @@ function renderMapField(params: {
           class="cfg-map__add"
           ?disabled=${disabled}
           @click=${() => {
-            const next = { ...(value ?? {}) };
-            let index = 1;
-            let key = `custom-${index}`;
-            while (key in next) {
-              index += 1;
-              key = `custom-${index}`;
-            }
-            next[key] = anySchema ? {} : defaultValue(schema);
-            onPatch(path, next);
-          }}
+      const next = { ...(value ?? {}) };
+      let index = 1;
+      let key = `custom-${index}`;
+      while (key in next) {
+        index += 1;
+        key = `custom-${index}`;
+      }
+      next[key] = anySchema ? {} : defaultValue(schema);
+      onPatch(path, next);
+    }}
         >
           <span class="cfg-map__add-icon">${icons.plus}</span>
-          Add Entry
+          ${t().addEntry}
         </button>
       </div>
 
-      ${
-        entries.length === 0
-          ? html`
-              <div class="cfg-map__empty">No custom entries.</div>
-            `
-          : html`
+      ${entries.length === 0 ? html`
+        <div class="cfg-map__empty">No custom entries.</div>
+      ` : html`
         <div class="cfg-map__items">
           ${entries.map(([key, entryValue]) => {
-            const valuePath = [...path, key];
-            const fallback = jsonValue(entryValue);
-            return html`
+      const valuePath = [...path, key];
+      const fallback = jsonValue(entryValue);
+      return html`
               <div class="cfg-map__item">
                 <div class="cfg-map__item-key">
                   <input
@@ -707,20 +621,19 @@ function renderMapField(params: {
                     .value=${key}
                     ?disabled=${disabled}
                     @change=${(e: Event) => {
-                      const nextKey = (e.target as HTMLInputElement).value.trim();
-                      if (!nextKey || nextKey === key) return;
-                      const next = { ...(value ?? {}) };
-                      if (nextKey in next) return;
-                      next[nextKey] = next[key];
-                      delete next[key];
-                      onPatch(path, next);
-                    }}
+          const nextKey = (e.target as HTMLInputElement).value.trim();
+          if (!nextKey || nextKey === key) return;
+          const next = { ...(value ?? {}) };
+          if (nextKey in next) return;
+          next[nextKey] = next[key];
+          delete next[key];
+          onPatch(path, next);
+        }}
                   />
                 </div>
                 <div class="cfg-map__item-value">
-                  ${
-                    anySchema
-                      ? html`
+                  ${anySchema
+          ? html`
                         <textarea
                           class="cfg-textarea cfg-textarea--sm"
                           placeholder="JSON value"
@@ -728,31 +641,30 @@ function renderMapField(params: {
                           .value=${fallback}
                           ?disabled=${disabled}
                           @change=${(e: Event) => {
-                            const target = e.target as HTMLTextAreaElement;
-                            const raw = target.value.trim();
-                            if (!raw) {
-                              onPatch(valuePath, undefined);
-                              return;
-                            }
-                            try {
-                              onPatch(valuePath, JSON.parse(raw));
-                            } catch {
-                              target.value = fallback;
-                            }
-                          }}
+              const target = e.target as HTMLTextAreaElement;
+              const raw = target.value.trim();
+              if (!raw) {
+                onPatch(valuePath, undefined);
+                return;
+              }
+              try {
+                onPatch(valuePath, JSON.parse(raw));
+              } catch {
+                target.value = fallback;
+              }
+            }}
                         ></textarea>
                       `
-                      : renderNode({
-                          schema,
-                          value: entryValue,
-                          path: valuePath,
-                          hints,
-                          unsupported,
-                          disabled,
-                          showLabel: false,
-                          onPatch,
-                        })
-                  }
+          : renderNode({
+            schema,
+            value: entryValue,
+            path: valuePath,
+            hints,
+            unsupported,
+            disabled,
+            showLabel: false,
+            onPatch,
+          })}
                 </div>
                 <button
                   type="button"
@@ -760,19 +672,18 @@ function renderMapField(params: {
                   title="Remove entry"
                   ?disabled=${disabled}
                   @click=${() => {
-                    const next = { ...(value ?? {}) };
-                    delete next[key];
-                    onPatch(path, next);
-                  }}
+          const next = { ...(value ?? {}) };
+          delete next[key];
+          onPatch(path, next);
+        }}
                 >
                   ${icons.trash}
                 </button>
               </div>
             `;
-          })}
+    })}
         </div>
-      `
-      }
+      `}
     </div>
   `;
 }

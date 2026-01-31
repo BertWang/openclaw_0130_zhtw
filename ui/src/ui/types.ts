@@ -310,6 +310,8 @@ export type PresenceEntry = {
   deviceFamily?: string | null;
   modelIdentifier?: string | null;
   mode?: string | null;
+  roles?: string[] | null;
+  scopes?: string[] | null;
   lastInputSeconds?: number | null;
   reason?: string | null;
   text?: string | null;
@@ -398,23 +400,23 @@ export type CronWakeMode = "next-heartbeat" | "now";
 export type CronPayload =
   | { kind: "systemEvent"; text: string }
   | {
-      kind: "agentTurn";
-      message: string;
-      thinking?: string;
-      timeoutSeconds?: number;
-      deliver?: boolean;
-      provider?:
-        | "last"
-        | "whatsapp"
-        | "telegram"
-        | "discord"
-        | "slack"
-        | "signal"
-        | "imessage"
-        | "msteams";
-      to?: string;
-      bestEffortDeliver?: boolean;
-    };
+    kind: "agentTurn";
+    message: string;
+    thinking?: string;
+    timeoutSeconds?: number;
+    deliver?: boolean;
+    provider?:
+    | "last"
+    | "whatsapp"
+    | "telegram"
+    | "discord"
+    | "slack"
+    | "signal"
+    | "imessage"
+    | "msteams";
+    to?: string;
+    bestEffortDeliver?: boolean;
+  };
 
 export type CronIsolation = {
   postToMainPrefix?: string;
@@ -514,7 +516,13 @@ export type StatusSummary = Record<string, unknown>;
 
 export type HealthSnapshot = Record<string, unknown>;
 
-export type LogLevel = "trace" | "debug" | "info" | "warn" | "error" | "fatal";
+export type LogLevel =
+  | "trace"
+  | "debug"
+  | "info"
+  | "warn"
+  | "error"
+  | "fatal";
 
 export type LogEntry = {
   raw: string;

@@ -8,7 +8,10 @@ export type NodesState = {
   lastError: string | null;
 };
 
-export async function loadNodes(state: NodesState, opts?: { quiet?: boolean }) {
+export async function loadNodes(
+  state: NodesState,
+  opts?: { quiet?: boolean },
+) {
   if (!state.client || !state.connected) return;
   if (state.nodesLoading) return;
   state.nodesLoading = true;

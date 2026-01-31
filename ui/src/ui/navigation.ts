@@ -1,4 +1,5 @@
 import type { IconName } from "./icons.js";
+import { t } from "./locales.js";
 
 export const TAB_GROUPS = [
   { label: "Chat", tabs: ["chat"] },
@@ -21,7 +22,8 @@ export type Tab =
   | "chat"
   | "config"
   | "debug"
-  | "logs";
+  | "logs"
+  | "docs-zh";
 
 const TAB_PATHS: Record<Tab, string> = {
   overview: "/overview",
@@ -35,9 +37,12 @@ const TAB_PATHS: Record<Tab, string> = {
   config: "/config",
   debug: "/debug",
   logs: "/logs",
+  "docs-zh": "/docs-zh",
 };
 
-const PATH_TO_TAB = new Map(Object.entries(TAB_PATHS).map(([tab, path]) => [path, tab as Tab]));
+const PATH_TO_TAB = new Map(
+  Object.entries(TAB_PATHS).map(([tab, path]) => [path, tab as Tab]),
+);
 
 export function normalizeBasePath(basePath: string): string {
   if (!basePath) return "";
@@ -122,64 +127,72 @@ export function iconForTab(tab: Tab): IconName {
       return "bug";
     case "logs":
       return "scrollText";
+    case "docs-zh":
+      return "book";
     default:
       return "folder";
   }
 }
 
 export function titleForTab(tab: Tab) {
+  const strings = t();
   switch (tab) {
     case "overview":
-      return "Overview";
+      return strings.tabTitleOverview;
     case "channels":
-      return "Channels";
+      return strings.tabTitleChannels;
     case "instances":
-      return "Instances";
+      return strings.tabTitleInstances;
     case "sessions":
-      return "Sessions";
+      return strings.tabTitleSessions;
     case "cron":
-      return "Cron Jobs";
+      return strings.tabTitleCron;
     case "skills":
-      return "Skills";
+      return strings.tabTitleSkills;
     case "nodes":
-      return "Nodes";
+      return strings.tabTitleNodes;
     case "chat":
-      return "Chat";
+      return strings.tabTitleChat;
     case "config":
-      return "Config";
+      return strings.tabTitleConfig;
     case "debug":
-      return "Debug";
+      return strings.tabTitleDebug;
     case "logs":
-      return "Logs";
+      return strings.tabTitleLogs;
+    case "docs-zh":
+      return "OpenClaw 中文文檔";
     default:
       return "Control";
   }
 }
 
 export function subtitleForTab(tab: Tab) {
+  const strings = t();
   switch (tab) {
     case "overview":
-      return "Gateway status, entry points, and a fast health read.";
+      return strings.tabSubOverview;
     case "channels":
-      return "Manage channels and settings.";
+      return strings.tabSubChannels;
     case "instances":
-      return "Presence beacons from connected clients and nodes.";
+      return strings.tabSubInstances;
     case "sessions":
-      return "Inspect active sessions and adjust per-session defaults.";
+      return strings.tabSubSessions;
     case "cron":
-      return "Schedule wakeups and recurring agent runs.";
+      return strings.tabSubCron;
     case "skills":
-      return "Manage skill availability and API key injection.";
+      return strings.tabSubSkills;
     case "nodes":
-      return "Paired devices, capabilities, and command exposure.";
+      return strings.tabSubNodes;
     case "chat":
-      return "Direct gateway chat session for quick interventions.";
+      return strings.tabSubChat;
     case "config":
-      return "Edit ~/.openclaw/openclaw.json safely.";
+      return strings.tabSubConfig;
     case "debug":
-      return "Gateway snapshots, events, and manual RPC calls.";
+      return strings.tabSubDebug;
     case "logs":
-      return "Live tail of the gateway file logs.";
+      return strings.tabSubLogs;
+    case "docs-zh":
+      return "核心概念與安裝指南";
     default:
       return "";
   }

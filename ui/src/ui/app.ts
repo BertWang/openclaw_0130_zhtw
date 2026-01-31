@@ -5,6 +5,7 @@ import type { GatewayBrowserClient, GatewayHelloOk } from "./gateway";
 import { resolveInjectedAssistantIdentity } from "./assistant-identity";
 import { loadSettings, type UiSettings } from "./storage";
 import { renderApp } from "./app-render";
+import { getLocale } from "./locales";
 import type { Tab } from "./navigation";
 import type { ResolvedTheme, ThemeMode } from "./theme";
 import type {
@@ -27,7 +28,10 @@ import type {
 import { type ChatAttachment, type ChatQueueItem, type CronFormState } from "./ui-types";
 import type { EventLogEntry } from "./app-events";
 import { DEFAULT_CRON_FORM, DEFAULT_LOG_LEVEL_FILTERS } from "./app-defaults";
-import type { ExecApprovalsFile, ExecApprovalsSnapshot } from "./controllers/exec-approvals";
+import type {
+  ExecApprovalsFile,
+  ExecApprovalsSnapshot,
+} from "./controllers/exec-approvals";
 import type { DevicePairingList } from "./controllers/devices";
 import type { ExecApprovalRequest } from "./controllers/exec-approval";
 import {
@@ -51,8 +55,10 @@ import {
   applySettings as applySettingsInternal,
   loadCron as loadCronInternal,
   loadOverview as loadOverviewInternal,
+  syncUrlWithTab as syncUrlWithTabInternal,
   setTab as setTabInternal,
   setTheme as setThemeInternal,
+  setLocale as setLocaleInternal,
   onPopState as onPopStateInternal,
 } from "./app-settings";
 import {
@@ -60,6 +66,7 @@ import {
   handleSendChat as handleSendChatInternal,
   removeQueuedMessage as removeQueuedMessageInternal,
 } from "./app-chat";
+import { type SkillMessage } from "./controllers/skills";
 import {
   handleChannelConfigReload as handleChannelConfigReloadInternal,
   handleChannelConfigSave as handleChannelConfigSaveInternal,
@@ -255,10 +262,12 @@ export class OpenClawApp extends LitElement {
   private logsScrollFrame: number | null = null;
   private toolStreamById = new Map<string, ToolStreamEntry>();
   private toolStreamOrder: string[] = [];
-  refreshSessionsAfterChat = new Set<string>();
+  refreshSessionsAfterChat = false;
   basePath = "";
   private popStateHandler = () =>
-    onPopStateInternal(this as unknown as Parameters<typeof onPopStateInternal>[0]);
+    onPopStateInternal(
+      this as unknown as Parameters<typeof onPopStateInternal>[0],
+    );
   private themeMedia: MediaQueryList | null = null;
   private themeMediaHandler: ((event: MediaQueryListEvent) => void) | null = null;
   private topbarObserver: ResizeObserver | null = null;
@@ -273,6 +282,10 @@ export class OpenClawApp extends LitElement {
   }
 
   protected firstUpdated() {
+    setLocaleInternal(
+      this as unknown as Parameters<typeof setLocaleInternal>[0],
+      this.settings.locale || getLocale(),
+    );
     handleFirstUpdated(this as unknown as Parameters<typeof handleFirstUpdated>[0]);
   }
 
@@ -282,11 +295,16 @@ export class OpenClawApp extends LitElement {
   }
 
   protected updated(changed: Map<PropertyKey, unknown>) {
-    handleUpdated(this as unknown as Parameters<typeof handleUpdated>[0], changed);
+    handleUpdated(
+      this as unknown as Parameters<typeof handleUpdated>[0],
+      changed,
+    );
   }
 
   connect() {
-    connectGatewayInternal(this as unknown as Parameters<typeof connectGatewayInternal>[0]);
+    connectGatewayInternal(
+      this as unknown as Parameters<typeof connectGatewayInternal>[0],
+    );
   }
 
   handleChatScroll(event: Event) {
@@ -308,11 +326,15 @@ export class OpenClawApp extends LitElement {
   }
 
   resetToolStream() {
-    resetToolStreamInternal(this as unknown as Parameters<typeof resetToolStreamInternal>[0]);
+    resetToolStreamInternal(
+      this as unknown as Parameters<typeof resetToolStreamInternal>[0],
+    );
   }
 
   resetChatScroll() {
-    resetChatScrollInternal(this as unknown as Parameters<typeof resetChatScrollInternal>[0]);
+    resetChatScrollInternal(
+      this as unknown as Parameters<typeof resetChatScrollInternal>[0],
+    );
   }
 
   async loadAssistantIdentity() {
@@ -320,7 +342,10 @@ export class OpenClawApp extends LitElement {
   }
 
   applySettings(next: UiSettings) {
-    applySettingsInternal(this as unknown as Parameters<typeof applySettingsInternal>[0], next);
+    applySettingsInternal(
+      this as unknown as Parameters<typeof applySettingsInternal>[0],
+      next,
+    );
   }
 
   setTab(next: Tab) {
@@ -328,19 +353,36 @@ export class OpenClawApp extends LitElement {
   }
 
   setTheme(next: ThemeMode, context?: Parameters<typeof setThemeInternal>[2]) {
-    setThemeInternal(this as unknown as Parameters<typeof setThemeInternal>[0], next, context);
+    setThemeInternal(
+      this as unknown as Parameters<typeof setThemeInternal>[0],
+      next,
+      context,
+    );
+  }
+
+  setLocale(next: "en" | "zh-TW") {
+    setLocaleInternal(
+      this as unknown as Parameters<typeof setLocaleInternal>[0],
+      next,
+    );
   }
 
   async loadOverview() {
-    await loadOverviewInternal(this as unknown as Parameters<typeof loadOverviewInternal>[0]);
+    await loadOverviewInternal(
+      this as unknown as Parameters<typeof loadOverviewInternal>[0],
+    );
   }
 
   async loadCron() {
-    await loadCronInternal(this as unknown as Parameters<typeof loadCronInternal>[0]);
+    await loadCronInternal(
+      this as unknown as Parameters<typeof loadCronInternal>[0],
+    );
   }
 
   async handleAbortChat() {
-    await handleAbortChatInternal(this as unknown as Parameters<typeof handleAbortChatInternal>[0]);
+    await handleAbortChatInternal(
+      this as unknown as Parameters<typeof handleAbortChatInternal>[0],
+    );
   }
 
   removeQueuedMessage(id: string) {
@@ -427,10 +469,10 @@ export class OpenClawApp extends LitElement {
     const nextGatewayUrl = this.pendingGatewayUrl;
     if (!nextGatewayUrl) return;
     this.pendingGatewayUrl = null;
-    applySettingsInternal(this as unknown as Parameters<typeof applySettingsInternal>[0], {
-      ...this.settings,
-      gatewayUrl: nextGatewayUrl,
-    });
+    applySettingsInternal(
+      this as unknown as Parameters<typeof applySettingsInternal>[0],
+      { ...this.settings, gatewayUrl: nextGatewayUrl },
+    );
     this.connect();
   }
 

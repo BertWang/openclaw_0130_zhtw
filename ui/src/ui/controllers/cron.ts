@@ -103,7 +103,8 @@ export async function addCronJob(state: CronState) {
       wakeMode: state.cronForm.wakeMode,
       payload,
       isolation:
-        state.cronForm.postToMainPrefix.trim() && state.cronForm.sessionTarget === "isolated"
+        state.cronForm.postToMainPrefix.trim() &&
+        state.cronForm.sessionTarget === "isolated"
           ? { postToMainPrefix: state.cronForm.postToMainPrefix.trim() }
           : undefined,
     };
@@ -124,7 +125,11 @@ export async function addCronJob(state: CronState) {
   }
 }
 
-export async function toggleCronJob(state: CronState, job: CronJob, enabled: boolean) {
+export async function toggleCronJob(
+  state: CronState,
+  job: CronJob,
+  enabled: boolean,
+) {
   if (!state.client || !state.connected || state.cronBusy) return;
   state.cronBusy = true;
   state.cronError = null;

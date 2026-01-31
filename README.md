@@ -1,4 +1,6 @@
-# 🦞 OpenClaw — Personal AI Assistant
+# 🦞 OpenClaw — Personal AI Assistant (繁體中文版)
+
+> 由 BertWang 中文化。感謝原作者 Peter Steinberger 與 OpenClaw 社群。
 
 <p align="center">
     <picture>

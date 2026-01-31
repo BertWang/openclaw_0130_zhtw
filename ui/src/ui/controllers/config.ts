@@ -1,5 +1,9 @@
 import type { GatewayBrowserClient } from "../gateway";
-import type { ConfigSchemaResponse, ConfigSnapshot, ConfigUiHints } from "../types";
+import type {
+  ConfigSchemaResponse,
+  ConfigSnapshot,
+  ConfigUiHints,
+} from "../types";
 import {
   cloneConfigObject,
   removePathValue,
@@ -53,7 +57,10 @@ export async function loadConfigSchema(state: ConfigState) {
   if (state.configSchemaLoading) return;
   state.configSchemaLoading = true;
   try {
-    const res = (await state.client.request("config.schema", {})) as ConfigSchemaResponse;
+    const res = (await state.client.request(
+      "config.schema",
+      {},
+    )) as ConfigSchemaResponse;
     applyConfigSchema(state, res);
   } catch (err) {
     state.lastError = String(err);
@@ -62,7 +69,10 @@ export async function loadConfigSchema(state: ConfigState) {
   }
 }
 
-export function applyConfigSchema(state: ConfigState, res: ConfigSchemaResponse) {
+export function applyConfigSchema(
+  state: ConfigState,
+  res: ConfigSchemaResponse,
+) {
   state.configSchema = res.schema ?? null;
   state.configUiHints = res.uiHints ?? {};
   state.configSchemaVersion = res.version ?? null;
@@ -165,7 +175,9 @@ export function updateConfigFormValue(
   path: Array<string | number>,
   value: unknown,
 ) {
-  const base = cloneConfigObject(state.configForm ?? state.configSnapshot?.config ?? {});
+  const base = cloneConfigObject(
+    state.configForm ?? state.configSnapshot?.config ?? {},
+  );
   setPathValue(base, path, value);
   state.configForm = base;
   state.configFormDirty = true;
@@ -174,8 +186,13 @@ export function updateConfigFormValue(
   }
 }
 
-export function removeConfigFormValue(state: ConfigState, path: Array<string | number>) {
-  const base = cloneConfigObject(state.configForm ?? state.configSnapshot?.config ?? {});
+export function removeConfigFormValue(
+  state: ConfigState,
+  path: Array<string | number>,
+) {
+  const base = cloneConfigObject(
+    state.configForm ?? state.configSnapshot?.config ?? {},
+  );
   removePathValue(base, path);
   state.configForm = base;
   state.configFormDirty = true;

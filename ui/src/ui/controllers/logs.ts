@@ -16,7 +16,14 @@ export type LogsState = {
 };
 
 const LOG_BUFFER_LIMIT = 2000;
-const LEVELS = new Set<LogLevel>(["trace", "debug", "info", "warn", "error", "fatal"]);
+const LEVELS = new Set<LogLevel>([
+  "trace",
+  "debug",
+  "info",
+  "warn",
+  "error",
+  "fatal",
+]);
 
 function parseMaybeJsonString(value: unknown) {
   if (typeof value !== "string") return null;
@@ -46,7 +53,11 @@ export function parseLogLine(line: string): LogEntry {
         ? (obj._meta as Record<string, unknown>)
         : null;
     const time =
-      typeof obj.time === "string" ? obj.time : typeof meta?.date === "string" ? meta?.date : null;
+      typeof obj.time === "string"
+        ? obj.time
+        : typeof meta?.date === "string"
+          ? meta?.date
+          : null;
     const level = normalizeLevel(meta?.logLevelName ?? meta?.level);
 
     const contextCandidate =
@@ -83,14 +94,17 @@ export function parseLogLine(line: string): LogEntry {
   }
 }
 
-export async function loadLogs(state: LogsState, opts?: { reset?: boolean; quiet?: boolean }) {
+export async function loadLogs(
+  state: LogsState,
+  opts?: { reset?: boolean; quiet?: boolean },
+) {
   if (!state.client || !state.connected) return;
   if (state.logsLoading && !opts?.quiet) return;
   if (!opts?.quiet) state.logsLoading = true;
   state.logsError = null;
   try {
     const res = await state.client.request("logs.tail", {
-      cursor: opts?.reset ? undefined : (state.logsCursor ?? undefined),
+      cursor: opts?.reset ? undefined : state.logsCursor ?? undefined,
       limit: state.logsLimit,
       maxBytes: state.logsMaxBytes,
     });

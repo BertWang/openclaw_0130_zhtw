@@ -153,7 +153,8 @@ export function resolveToolDisplay(params: {
     detail = resolveWriteDetail(params.args);
   }
 
-  const detailKeys = actionSpec?.detailKeys ?? spec?.detailKeys ?? FALLBACK.detailKeys ?? [];
+  const detailKeys =
+    actionSpec?.detailKeys ?? spec?.detailKeys ?? FALLBACK.detailKeys ?? [];
   if (!detail && detailKeys.length > 0) {
     detail = resolveDetailFromKeys(params.args, detailKeys);
   }
@@ -191,5 +192,7 @@ export function formatToolSummary(display: ToolDisplay): string {
 
 function shortenHomeInString(input: string): string {
   if (!input) return input;
-  return input.replace(/\/Users\/[^/]+/g, "~").replace(/\/home\/[^/]+/g, "~");
+  return input
+    .replace(/\/Users\/[^/]+/g, "~")
+    .replace(/\/home\/[^/]+/g, "~");
 }

@@ -1,5 +1,7 @@
 # OpenClaw macOS app (dev + signing)
 
+> 由 BertWang 中文化。感謝原作者 Peter Steinberger 與 OpenClaw 社群。
+
 ## Quick dev run
 
 ```bash

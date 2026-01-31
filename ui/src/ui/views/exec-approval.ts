@@ -1,6 +1,7 @@
 import { html, nothing } from "lit";
 
 import type { AppViewState } from "../app-view-state";
+import { t } from "../locales";
 
 function formatRemaining(ms: number): string {
   const remaining = Math.max(0, ms);
@@ -18,25 +19,24 @@ function renderMetaRow(label: string, value?: string | null) {
 }
 
 export function renderExecApprovalPrompt(state: AppViewState) {
+  const strings = t();
   const active = state.execApprovalQueue[0];
   if (!active) return nothing;
   const request = active.request;
   const remainingMs = active.expiresAtMs - Date.now();
-  const remaining = remainingMs > 0 ? `expires in ${formatRemaining(remainingMs)}` : "expired";
+  const remaining = remainingMs > 0 ? strings.expiresIn(formatRemaining(remainingMs)) : strings.expired;
   const queueCount = state.execApprovalQueue.length;
   return html`
     <div class="exec-approval-overlay" role="dialog" aria-live="polite">
       <div class="exec-approval-card">
         <div class="exec-approval-header">
           <div>
-            <div class="exec-approval-title">Exec approval needed</div>
+            <div class="exec-approval-title">${strings.execApprovalNeeded}</div>
             <div class="exec-approval-sub">${remaining}</div>
           </div>
-          ${
-            queueCount > 1
-              ? html`<div class="exec-approval-queue">${queueCount} pending</div>`
-              : nothing
-          }
+          ${queueCount > 1
+      ? html`<div class="exec-approval-queue">${strings.pendingCount(queueCount)}</div>`
+      : nothing}
         </div>
         <div class="exec-approval-command mono">${request.command}</div>
         <div class="exec-approval-meta">
@@ -48,32 +48,30 @@ export function renderExecApprovalPrompt(state: AppViewState) {
           ${renderMetaRow("Security", request.security)}
           ${renderMetaRow("Ask", request.ask)}
         </div>
-        ${
-          state.execApprovalError
-            ? html`<div class="exec-approval-error">${state.execApprovalError}</div>`
-            : nothing
-        }
+        ${state.execApprovalError
+      ? html`<div class="exec-approval-error">${state.execApprovalError}</div>`
+      : nothing}
         <div class="exec-approval-actions">
           <button
             class="btn primary"
             ?disabled=${state.execApprovalBusy}
             @click=${() => state.handleExecApprovalDecision("allow-once")}
           >
-            Allow once
+            ${strings.allowOnce}
           </button>
           <button
             class="btn"
             ?disabled=${state.execApprovalBusy}
             @click=${() => state.handleExecApprovalDecision("allow-always")}
           >
-            Always allow
+            ${strings.allowAlways}
           </button>
           <button
             class="btn danger"
             ?disabled=${state.execApprovalBusy}
             @click=${() => state.handleExecApprovalDecision("deny")}
           >
-            Deny
+            ${strings.deny}
           </button>
         </div>
       </div>

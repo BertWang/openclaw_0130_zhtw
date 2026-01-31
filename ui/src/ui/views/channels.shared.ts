@@ -1,6 +1,7 @@
 import { html, nothing } from "lit";
 
 import type { ChannelAccountSnapshot } from "../types";
+import { t } from "../locales";
 import type { ChannelKey, ChannelsProps } from "./channels.types";
 
 export function formatDuration(ms?: number | null) {
@@ -39,7 +40,8 @@ export function renderChannelAccountCount(
   key: ChannelKey,
   channelAccounts?: Record<string, ChannelAccountSnapshot[]> | null,
 ) {
+  const strings = t();
   const count = getChannelAccountCount(key, channelAccounts);
   if (count < 2) return nothing;
-  return html`<div class="account-count">Accounts (${count})</div>`;
+  return html`<div class="account-count">${strings.accounts(count)}</div>`;
 }

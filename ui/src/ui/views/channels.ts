@@ -1,4 +1,5 @@
 import { html, nothing } from "lit";
+import { t } from "../locales";
 
 import { formatAgo } from "../format";
 import type {
@@ -15,7 +16,11 @@ import type {
   TelegramStatus,
   WhatsAppStatus,
 } from "../types";
-import type { ChannelKey, ChannelsChannelData, ChannelsProps } from "./channels.types";
+import type {
+  ChannelKey,
+  ChannelsChannelData,
+  ChannelsProps,
+} from "./channels.types";
 import { channelEnabled, renderChannelAccountCount } from "./channels.shared";
 import { renderChannelConfigSection } from "./channels.config";
 import { renderDiscordCard } from "./channels.discord";
@@ -29,8 +34,12 @@ import { renderWhatsAppCard } from "./channels.whatsapp";
 
 export function renderChannels(props: ChannelsProps) {
   const channels = props.snapshot?.channels as Record<string, unknown> | null;
-  const whatsapp = (channels?.whatsapp ?? undefined) as WhatsAppStatus | undefined;
-  const telegram = (channels?.telegram ?? undefined) as TelegramStatus | undefined;
+  const whatsapp = (channels?.whatsapp ?? undefined) as
+    | WhatsAppStatus
+    | undefined;
+  const telegram = (channels?.telegram ?? undefined) as
+    | TelegramStatus
+    | undefined;
   const discord = (channels?.discord ?? null) as DiscordStatus | null;
   const googlechat = (channels?.googlechat ?? null) as GoogleChatStatus | null;
   const slack = (channels?.slack ?? null) as SlackStatus | null;
@@ -49,38 +58,37 @@ export function renderChannels(props: ChannelsProps) {
       return a.order - b.order;
     });
 
+  const strings = t();
   return html`
     <section class="grid grid-cols-2">
       ${orderedChannels.map((channel) =>
-        renderChannel(channel.key, props, {
-          whatsapp,
-          telegram,
-          discord,
-          googlechat,
-          slack,
-          signal,
-          imessage,
-          nostr,
-          channelAccounts: props.snapshot?.channelAccounts ?? null,
-        }),
-      )}
+    renderChannel(channel.key, props, {
+      whatsapp,
+      telegram,
+      discord,
+      googlechat,
+      slack,
+      signal,
+      imessage,
+      nostr,
+      channelAccounts: props.snapshot?.channelAccounts ?? null,
+    }),
+  )}
     </section>
 
     <section class="card" style="margin-top: 18px;">
       <div class="row" style="justify-content: space-between;">
         <div>
-          <div class="card-title">Channel health</div>
-          <div class="card-sub">Channel status snapshots from the gateway.</div>
+          <div class="card-title">${strings.channelsTitle} (Health)</div>
+          <div class="card-sub">${strings.channelsSub}</div>
         </div>
         <div class="muted">${props.lastSuccessAt ? formatAgo(props.lastSuccessAt) : "n/a"}</div>
       </div>
-      ${
-        props.lastError
-          ? html`<div class="callout danger" style="margin-top: 12px;">
+      ${props.lastError
+      ? html`<div class="callout danger" style="margin-top: 12px;">
             ${props.lastError}
           </div>`
-          : nothing
-      }
+      : nothing}
       <pre class="code-block" style="margin-top: 12px;">
 ${props.snapshot ? JSON.stringify(props.snapshot, null, 2) : "No snapshot yet."}
       </pre>
@@ -95,11 +103,27 @@ function resolveChannelOrder(snapshot: ChannelsStatusSnapshot | null): ChannelKe
   if (snapshot?.channelOrder?.length) {
     return snapshot.channelOrder;
   }
-  return ["whatsapp", "telegram", "discord", "googlechat", "slack", "signal", "imessage", "nostr"];
+  return [
+    "whatsapp",
+    "telegram",
+    "discord",
+    "googlechat",
+    "slack",
+    "signal",
+    "imessage",
+    "nostr",
+  ];
 }
 
-function renderChannel(key: ChannelKey, props: ChannelsProps, data: ChannelsChannelData) {
-  const accountCountLabel = renderChannelAccountCount(key, data.channelAccounts);
+function renderChannel(
+  key: ChannelKey,
+  props: ChannelsProps,
+  data: ChannelsChannelData,
+) {
+  const accountCountLabel = renderChannelAccountCount(
+    key,
+    data.channelAccounts,
+  );
   switch (key) {
     case "whatsapp":
       return renderWhatsAppCard({
@@ -123,7 +147,7 @@ function renderChannel(key: ChannelKey, props: ChannelsProps, data: ChannelsChan
     case "googlechat":
       return renderGoogleChatCard({
         props,
-        googlechat: data.googlechat,
+        googleChat: data.googlechat,
         accountCountLabel,
       });
     case "slack":
@@ -154,12 +178,12 @@ function renderChannel(key: ChannelKey, props: ChannelsProps, data: ChannelsChan
         props.nostrProfileAccountId === accountId ? props.nostrProfileFormState : null;
       const profileFormCallbacks = showForm
         ? {
-            onFieldChange: props.onNostrProfileFieldChange,
-            onSave: props.onNostrProfileSave,
-            onImport: props.onNostrProfileImport,
-            onCancel: props.onNostrProfileCancel,
-            onToggleAdvanced: props.onNostrProfileToggleAdvanced,
-          }
+          onFieldChange: props.onNostrProfileFieldChange,
+          onSave: props.onNostrProfileSave,
+          onImport: props.onNostrProfileImport,
+          onCancel: props.onNostrProfileCancel,
+          onToggleAdvanced: props.onNostrProfileToggleAdvanced,
+        }
         : null;
       return renderNostrCard({
         props,
@@ -190,44 +214,41 @@ function renderGenericChannelCard(
   const accounts = channelAccounts[key] ?? [];
   const accountCountLabel = renderChannelAccountCount(key, channelAccounts);
 
+  const strings = t();
   return html`
     <div class="card">
       <div class="card-title">${label}</div>
-      <div class="card-sub">Channel status and configuration.</div>
+      <div class="card-sub">${strings.channelsSub}</div>
       ${accountCountLabel}
 
-      ${
-        accounts.length > 0
-          ? html`
+      ${accounts.length > 0
+      ? html`
             <div class="account-card-list">
               ${accounts.map((account) => renderGenericAccount(account))}
             </div>
           `
-          : html`
+      : html`
             <div class="status-list" style="margin-top: 16px;">
               <div>
-                <span class="label">Configured</span>
-                <span>${configured == null ? "n/a" : configured ? "Yes" : "No"}</span>
+                <span class="label">${strings.configured}</span>
+                <span>${configured == null ? "n/a" : configured ? strings.healthOk : strings.healthOffline}</span>
               </div>
               <div>
-                <span class="label">Running</span>
-                <span>${running == null ? "n/a" : running ? "Yes" : "No"}</span>
+                <span class="label">${strings.running}</span>
+                <span>${running == null ? "n/a" : running ? strings.healthOk : strings.healthOffline}</span>
               </div>
               <div>
-                <span class="label">Connected</span>
-                <span>${connected == null ? "n/a" : connected ? "Yes" : "No"}</span>
+                <span class="label">${strings.connected}</span>
+                <span>${connected == null ? "n/a" : connected ? strings.healthOk : strings.healthOffline}</span>
               </div>
             </div>
-          `
-      }
+          `}
 
-      ${
-        lastError
-          ? html`<div class="callout danger" style="margin-top: 12px;">
+      ${lastError
+      ? html`<div class="callout danger" style="margin-top: 12px;">
             ${lastError}
           </div>`
-          : nothing
-      }
+      : nothing}
 
       ${renderChannelConfigSection({ channelId: key, props })}
     </div>
@@ -241,7 +262,10 @@ function resolveChannelMetaMap(
   return Object.fromEntries(snapshot.channelMeta.map((entry) => [entry.id, entry]));
 }
 
-function resolveChannelLabel(snapshot: ChannelsStatusSnapshot | null, key: string): string {
+function resolveChannelLabel(
+  snapshot: ChannelsStatusSnapshot | null,
+  key: string,
+): string {
   const meta = resolveChannelMetaMap(snapshot)[key];
   return meta?.label ?? snapshot?.channelLabels?.[key] ?? key;
 }
@@ -273,38 +297,37 @@ function renderGenericAccount(account: ChannelAccountSnapshot) {
   const connectedStatus = deriveConnectedStatus(account);
 
   return html`
-    <div class="account-card">
-      <div class="account-card-header">
-        <div class="account-card-title">${account.name || account.accountId}</div>
-        <div class="account-card-id">${account.accountId}</div>
-      </div>
-      <div class="status-list account-card-status">
-        <div>
-          <span class="label">Running</span>
-          <span>${runningStatus}</span>
-        </div>
-        <div>
-          <span class="label">Configured</span>
-          <span>${account.configured ? "Yes" : "No"}</span>
-        </div>
-        <div>
-          <span class="label">Connected</span>
-          <span>${connectedStatus}</span>
-        </div>
-        <div>
-          <span class="label">Last inbound</span>
-          <span>${account.lastInboundAt ? formatAgo(account.lastInboundAt) : "n/a"}</span>
-        </div>
-        ${
-          account.lastError
-            ? html`
+    < div class="account-card" >
+      <div class="account-card-header" >
+        <div class="account-card-title" > ${account.name || account.accountId} </div>
+          < div class="account-card-id" > ${account.accountId} </div>
+            </div>
+            < div class="status-list account-card-status" >
+              <div>
+              <span class="label" > Running </span>
+                < span > ${runningStatus} </span>
+                  </div>
+                  < div >
+                  <span class="label" > Configured </span>
+                    < span > ${account.configured ? "Yes" : "No"} </span>
+                      </div>
+                      < div >
+                      <span class="label" > Connected </span>
+                        < span > ${connectedStatus} </span>
+                          </div>
+                          < div >
+                          <span class="label" > Last inbound </span>
+                            < span > ${account.lastInboundAt ? formatAgo(account.lastInboundAt) : "n/a"} </span>
+                              </div>
+        ${account.lastError
+      ? html`
               <div class="account-card-error">
                 ${account.lastError}
               </div>
             `
-            : nothing
-        }
-      </div>
+      : nothing
+    }
+  </div>
     </div>
-  `;
+      `;
 }

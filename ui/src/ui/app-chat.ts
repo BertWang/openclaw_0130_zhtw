@@ -21,10 +21,8 @@ type ChatHost = {
   basePath: string;
   hello: GatewayHelloOk | null;
   chatAvatarUrl: string | null;
-  refreshSessionsAfterChat: Set<string>;
+  refreshSessionsAfterChat: boolean;
 };
-
-export const CHAT_SESSIONS_ACTIVE_MINUTES = 10;
 
 export function isChatBusy(host: ChatHost) {
   return host.chatSending || Boolean(host.chatRunId);
@@ -58,12 +56,7 @@ export async function handleAbortChat(host: ChatHost) {
   await abortChatRun(host as unknown as OpenClawApp);
 }
 
-function enqueueChatMessage(
-  host: ChatHost,
-  text: string,
-  attachments?: ChatAttachment[],
-  refreshSessions?: boolean,
-) {
+function enqueueChatMessage(host: ChatHost, text: string, attachments?: ChatAttachment[]) {
   const trimmed = text.trim();
   const hasAttachments = Boolean(attachments && attachments.length > 0);
   if (!trimmed && !hasAttachments) return;
@@ -74,7 +67,6 @@ function enqueueChatMessage(
       text: trimmed,
       createdAt: Date.now(),
       attachments: hasAttachments ? attachments?.map((att) => ({ ...att })) : undefined,
-      refreshSessions,
     },
   ];
 }
@@ -92,8 +84,7 @@ async function sendChatMessageNow(
   },
 ) {
   resetToolStream(host as unknown as Parameters<typeof resetToolStream>[0]);
-  const runId = await sendChatMessage(host as unknown as OpenClawApp, message, opts?.attachments);
-  const ok = Boolean(runId);
+  const ok = await sendChatMessage(host as unknown as OpenClawApp, message, opts?.attachments);
   if (!ok && opts?.previousDraft != null) {
     host.chatMessage = opts.previousDraft;
   }
@@ -101,10 +92,7 @@ async function sendChatMessageNow(
     host.chatAttachments = opts.previousAttachments;
   }
   if (ok) {
-    setLastActiveSessionKey(
-      host as unknown as Parameters<typeof setLastActiveSessionKey>[0],
-      host.sessionKey,
-    );
+    setLastActiveSessionKey(host as unknown as Parameters<typeof setLastActiveSessionKey>[0], host.sessionKey);
   }
   if (ok && opts?.restoreDraft && opts.previousDraft?.trim()) {
     host.chatMessage = opts.previousDraft;
@@ -116,8 +104,8 @@ async function sendChatMessageNow(
   if (ok && !host.chatRunId) {
     void flushChatQueue(host);
   }
-  if (ok && opts?.refreshSessions && runId) {
-    host.refreshSessionsAfterChat.add(runId);
+  if (ok && opts?.refreshSessions) {
+    host.refreshSessionsAfterChat = true;
   }
   return ok;
 }
@@ -127,10 +115,7 @@ async function flushChatQueue(host: ChatHost) {
   const [next, ...rest] = host.chatQueue;
   if (!next) return;
   host.chatQueue = rest;
-  const ok = await sendChatMessageNow(host, next.text, {
-    attachments: next.attachments,
-    refreshSessions: next.refreshSessions,
-  });
+  const ok = await sendChatMessageNow(host, next.text, { attachments: next.attachments });
   if (!ok) {
     host.chatQueue = [next, ...host.chatQueue];
   }
@@ -168,7 +153,7 @@ export async function handleSendChat(
   }
 
   if (isChatBusy(host)) {
-    enqueueChatMessage(host, message, attachmentsToSend, refreshSessions);
+    enqueueChatMessage(host, message, attachmentsToSend);
     return;
   }
 
@@ -185,9 +170,7 @@ export async function handleSendChat(
 export async function refreshChat(host: ChatHost) {
   await Promise.all([
     loadChatHistory(host as unknown as OpenClawApp),
-    loadSessions(host as unknown as OpenClawApp, {
-      activeMinutes: CHAT_SESSIONS_ACTIVE_MINUTES,
-    }),
+    loadSessions(host as unknown as OpenClawApp, { activeMinutes: 0 }),
     refreshChatAvatar(host),
   ]);
   scheduleChatScroll(host as unknown as Parameters<typeof scheduleChatScroll>[0], true);
@@ -202,9 +185,7 @@ type SessionDefaultsSnapshot = {
 function resolveAgentIdForSession(host: ChatHost): string | null {
   const parsed = parseAgentSessionKey(host.sessionKey);
   if (parsed?.agentId) return parsed.agentId;
-  const snapshot = host.hello?.snapshot as
-    | { sessionDefaults?: SessionDefaultsSnapshot }
-    | undefined;
+  const snapshot = host.hello?.snapshot as { sessionDefaults?: SessionDefaultsSnapshot } | undefined;
   const fallback = snapshot?.sessionDefaults?.defaultAgentId?.trim();
   return fallback || "main";
 }

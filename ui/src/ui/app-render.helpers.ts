@@ -10,6 +10,7 @@ import { syncUrlWithSessionKey } from "./app-settings";
 import type { SessionsListResult } from "./types";
 import type { ThemeMode } from "./theme";
 import type { ThemeTransitionContext } from "./theme-transition";
+import { getLocale } from "./locales";
 
 export function renderTab(state: AppViewState, tab: Tab) {
   const href = pathForTab(tab, state.basePath);
@@ -18,19 +19,19 @@ export function renderTab(state: AppViewState, tab: Tab) {
       href=${href}
       class="nav-item ${state.tab === tab ? "active" : ""}"
       @click=${(event: MouseEvent) => {
-        if (
-          event.defaultPrevented ||
-          event.button !== 0 ||
-          event.metaKey ||
-          event.ctrlKey ||
-          event.shiftKey ||
-          event.altKey
-        ) {
-          return;
-        }
-        event.preventDefault();
-        state.setTab(tab);
-      }}
+      if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      ) {
+        return;
+      }
+      event.preventDefault();
+      state.setTab(tab);
+    }}
       title=${titleForTab(tab)}
     >
       <span class="nav-item__icon" aria-hidden="true">${icons[iconForTab(tab)]}</span>
@@ -51,39 +52,8 @@ export function renderChatControls(state: AppViewState) {
   const showThinking = state.onboarding ? false : state.settings.chatShowThinking;
   const focusActive = state.onboarding ? true : state.settings.chatFocusMode;
   // Refresh icon
-  const refreshIcon = html`
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path>
-      <path d="M21 3v5h-5"></path>
-    </svg>
-  `;
-  const focusIcon = html`
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <path d="M4 7V4h3"></path>
-      <path d="M20 7V4h-3"></path>
-      <path d="M4 17v3h3"></path>
-      <path d="M20 17v3h-3"></path>
-      <circle cx="12" cy="12" r="3"></circle>
-    </svg>
-  `;
+  const refreshIcon = html`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path></svg>`;
+  const focusIcon = html`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h3"></path><path d="M20 7V4h-3"></path><path d="M4 17v3h3"></path><path d="M20 17v3h-3"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
   return html`
     <div class="chat-controls">
       <label class="field chat-controls__session">
@@ -91,41 +61,41 @@ export function renderChatControls(state: AppViewState) {
           .value=${state.sessionKey}
           ?disabled=${!state.connected}
           @change=${(e: Event) => {
-            const next = (e.target as HTMLSelectElement).value;
-            state.sessionKey = next;
-            state.chatMessage = "";
-            state.chatStream = null;
-            state.chatStreamStartedAt = null;
-            state.chatRunId = null;
-            state.resetToolStream();
-            state.resetChatScroll();
-            state.applySettings({
-              ...state.settings,
-              sessionKey: next,
-              lastActiveSessionKey: next,
-            });
-            void state.loadAssistantIdentity();
-            syncUrlWithSessionKey(state, next, true);
-            void loadChatHistory(state);
-          }}
+      const next = (e.target as HTMLSelectElement).value;
+      state.sessionKey = next;
+      state.chatMessage = "";
+      state.chatStream = null;
+      state.chatStreamStartedAt = null;
+      state.chatRunId = null;
+      state.resetToolStream();
+      state.resetChatScroll();
+      state.applySettings({
+        ...state.settings,
+        sessionKey: next,
+        lastActiveSessionKey: next,
+      });
+      void state.loadAssistantIdentity();
+      syncUrlWithSessionKey(state, next, true);
+      void loadChatHistory(state);
+    }}
         >
           ${repeat(
-            sessionOptions,
-            (entry) => entry.key,
-            (entry) =>
-              html`<option value=${entry.key}>
+      sessionOptions,
+      (entry) => entry.key,
+      (entry) =>
+        html`<option value=${entry.key}>
                 ${entry.displayName ?? entry.key}
               </option>`,
-          )}
+    )}
         </select>
       </label>
       <button
         class="btn btn--sm btn--icon"
         ?disabled=${state.chatLoading || !state.connected}
         @click=${() => {
-          state.resetToolStream();
-          void refreshChat(state as unknown as Parameters<typeof refreshChat>[0]);
-        }}
+      state.resetToolStream();
+      void refreshChat(state as unknown as Parameters<typeof refreshChat>[0]);
+    }}
         title="Refresh chat data"
       >
         ${refreshIcon}
@@ -135,18 +105,16 @@ export function renderChatControls(state: AppViewState) {
         class="btn btn--sm btn--icon ${showThinking ? "active" : ""}"
         ?disabled=${disableThinkingToggle}
         @click=${() => {
-          if (disableThinkingToggle) return;
-          state.applySettings({
-            ...state.settings,
-            chatShowThinking: !state.settings.chatShowThinking,
-          });
-        }}
+      if (disableThinkingToggle) return;
+      state.applySettings({
+        ...state.settings,
+        chatShowThinking: !state.settings.chatShowThinking,
+      });
+    }}
         aria-pressed=${showThinking}
-        title=${
-          disableThinkingToggle
-            ? "Disabled during onboarding"
-            : "Toggle assistant thinking/working output"
-        }
+        title=${disableThinkingToggle
+      ? "Disabled during onboarding"
+      : "Toggle assistant thinking/working output"}
       >
         ${icons.brain}
       </button>
@@ -154,18 +122,16 @@ export function renderChatControls(state: AppViewState) {
         class="btn btn--sm btn--icon ${focusActive ? "active" : ""}"
         ?disabled=${disableFocusToggle}
         @click=${() => {
-          if (disableFocusToggle) return;
-          state.applySettings({
-            ...state.settings,
-            chatFocusMode: !state.settings.chatFocusMode,
-          });
-        }}
+      if (disableFocusToggle) return;
+      state.applySettings({
+        ...state.settings,
+        chatFocusMode: !state.settings.chatFocusMode,
+      });
+    }}
         aria-pressed=${focusActive}
-        title=${
-          disableFocusToggle
-            ? "Disabled during onboarding"
-            : "Toggle focus mode (hide sidebar + page header)"
-        }
+        title=${disableFocusToggle
+      ? "Disabled during onboarding"
+      : "Toggle focus mode (hide sidebar + page header)"}
       >
         ${focusIcon}
       </button>
@@ -191,14 +157,6 @@ function resolveMainSessionKey(
   return null;
 }
 
-function resolveSessionDisplayName(key: string, row?: SessionsListResult["sessions"][number]) {
-  const label = row?.label?.trim();
-  if (label) return `${label} (${key})`;
-  const displayName = row?.displayName?.trim();
-  if (displayName) return displayName;
-  return key;
-}
-
 function resolveSessionOptions(
   sessionKey: string,
   sessions: SessionsListResult | null,
@@ -207,25 +165,20 @@ function resolveSessionOptions(
   const seen = new Set<string>();
   const options: Array<{ key: string; displayName?: string }> = [];
 
-  const resolvedMain = mainSessionKey && sessions?.sessions?.find((s) => s.key === mainSessionKey);
+  const resolvedMain =
+    mainSessionKey && sessions?.sessions?.find((s) => s.key === mainSessionKey);
   const resolvedCurrent = sessions?.sessions?.find((s) => s.key === sessionKey);
 
   // Add main session key first
   if (mainSessionKey) {
     seen.add(mainSessionKey);
-    options.push({
-      key: mainSessionKey,
-      displayName: resolveSessionDisplayName(mainSessionKey, resolvedMain),
-    });
+    options.push({ key: mainSessionKey, displayName: resolvedMain?.displayName });
   }
 
   // Add current session key next
   if (!seen.has(sessionKey)) {
     seen.add(sessionKey);
-    options.push({
-      key: sessionKey,
-      displayName: resolveSessionDisplayName(sessionKey, resolvedCurrent),
-    });
+    options.push({ key: sessionKey, displayName: resolvedCurrent?.displayName });
   }
 
   // Add sessions from the result
@@ -233,10 +186,7 @@ function resolveSessionOptions(
     for (const s of sessions.sessions) {
       if (!seen.has(s.key)) {
         seen.add(s.key);
-        options.push({
-          key: s.key,
-          displayName: resolveSessionDisplayName(s.key, s),
-        });
+        options.push({ key: s.key, displayName: s.displayName });
       }
     }
   }
@@ -327,5 +277,38 @@ function renderMonitorIcon() {
       <line x1="8" x2="16" y1="21" y2="21"></line>
       <line x1="12" x2="12" y1="17" y2="21"></line>
     </svg>
+  `;
+}
+
+export function renderLocaleToggle(state: AppViewState) {
+  const current = state.settings.locale || getLocale();
+  const toggle = (locale: "en" | "zh-TW") => () => {
+    state.setLocale(locale);
+  };
+
+  return html`
+    <div class="locale-toggle">
+      <div class="theme-toggle__track" role="group" aria-label="Language">
+        <span class="theme-toggle__indicator" style="left: ${current === "en" ? "2px" : "calc(50% + 2px)"}; width: calc(50% - 4px);"></span>
+        <button
+          class="theme-toggle__button ${current === "en" ? "active" : ""}"
+          @click=${toggle("en")}
+          aria-pressed=${current === "en"}
+          title="English"
+          style="width: 50%;"
+        >
+          EN
+        </button>
+        <button
+          class="theme-toggle__button ${current === "zh-TW" ? "active" : ""}"
+          @click=${toggle("zh-TW")}
+          aria-pressed=${current === "zh-TW"}
+          title="中文 (繁體)"
+          style="width: 50%;"
+        >
+          中
+        </button>
+      </div>
+    </div>
   `;
 }
